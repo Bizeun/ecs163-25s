@@ -3,16 +3,20 @@ const height = window.innerHeight;
 
 let heatmapLeft = 0, heatmapTop = 50;
 let heatmapMargin = {top: 60, right: 50, bottom: 80, left: 100},
-    heatmapWidth = width - heatmapMargin.left - heatmapMargin.right,
-    heatmapHeight = height * 0.5 - heatmapMargin.top - heatmapMargin.bottom;
+    heatmapWidth = width * 0.5 - heatmapMargin.left - heatmapMargin.right,
+    heatmapHeight = height - 100 - heatmapMargin.top - heatmapMargin.bottom;
 
-let scatterLeft = 0, scatterTop = height * 0.5 + 30;
-let scatterMargin = {top: 60, right: 50, bottom: 80, left: 100},
-    scatterWidth = width - scatterMargin.left - scatterMargin.right,
-    scatterHeight = height * 0.5 - 30 - scatterMargin.top - scatterMargin.bottom;
+let scatterLeft = width * 0.5, scatterTop = 50;
+let scatterMargin = {top: 60, right: 150, bottom: 80, left: 50},
+    scatterWidth = width * 0.5 - scatterMargin.left - scatterMargin.right,
+    scatterHeight = (height - 100) * 0.5 - scatterMargin.top - scatterMargin.bottom;
+
+let starPlotLeft = width * 0.5, starPlotTop = 50 + (height - 100) * 0.5;
+let starPlotMargin = {top: 60, right: 50, bottom: 80, left: 60},
+    starPlotWidth = width * 0.5 - starPlotMargin.left - starPlotMargin.right,
+    starPlotHeight = (height - 100) * 0.5 - starPlotMargin.top - starPlotMargin.bottom;
 
 let pokemonData = [];
-
 const typeColors = {
     "Normal": "#A8A878",
     "Fire": "#F08030",
@@ -34,10 +38,8 @@ const typeColors = {
     "Fairy": "#F0B6BC"
 };
 
-
 d3.csv("data/pokemon_alopez247.csv").then(data => {
     console.log("Pokemon data loaded successfully");
-
     data.forEach(d => {
         d.Number = +d.Number;
         d.Total = +d.Total;
@@ -58,39 +60,48 @@ d3.csv("data/pokemon_alopez247.csv").then(data => {
     });
     pokemonData = data;
     const svg = d3.select("svg");
-    
     svg.append("text")
         .attr("x", width / 2)
         .attr("y", 30)
         .attr("text-anchor", "middle")
         .attr("font-size", "24px")
         .attr("font-weight", "bold")
-        .attr("fill", "#2a75bb")
-        .text("Pokemon Data Visualization Dashboard");
+        .append("tspan")
+            .attr("fill", "#FFD700") 
+            .text("Pokemon ")
+        .append("tspan")
+            .attr("fill", "black")
+            .text("Data Visualization Dashboard");
+
     const heatmapGroup = svg.append("g")
-        .attr("transform", `translate(${heatmapMargin.left}, ${heatmapTop + heatmapMargin.top})`);
+        .attr("transform", `translate(${heatmapLeft + heatmapMargin.left}, ${heatmapTop + heatmapMargin.top})`);
     
     const scatterGroup = svg.append("g")
-        .attr("transform", `translate(${scatterMargin.left}, ${scatterTop + scatterMargin.top})`);
+        .attr("transform", `translate(${scatterLeft + scatterMargin.left}, ${scatterTop + scatterMargin.top})`);
+    
+    const starPlotGroup = svg.append("g")
+        .attr("transform", `translate(${starPlotLeft + starPlotMargin.left}, ${starPlotTop + starPlotMargin.top})`);
     
     svg.append("text")
-        .attr("x", width / 2)
+        .attr("x", heatmapLeft + heatmapMargin.left + heatmapWidth / 2)
         .attr("y", heatmapTop + 30)
         .attr("text-anchor", "middle")
-        .attr("font-size", "18px")
-        .attr("fill", "#3c5aa6")
-        .text("Pokemon Type_1 Distribution by Generation (Overview)");
+        .attr("font-size", "16px")
+        .attr("fill", "black")
+        .text("Pokemon Type Distribution by Generation (Overview)");
     
     svg.append("text")
-        .attr("x", width / 2)
+        .attr("x", scatterLeft + scatterMargin.left + scatterWidth / 2)
         .attr("y", scatterTop + 30)
         .attr("text-anchor", "middle")
-        .attr("font-size", "18px")
-        .attr("fill", "#3c5aa6")
-        .text("Pokemon Physical Attributes vs Stats (Type 1 & Type 2)");
-
+        .attr("font-size", "16px")
+        .attr("fill", "black")
+        .text("Pokemon Weight vs Total Stats");
+   
+    
     createHeatmap(heatmapGroup, heatmapWidth, heatmapHeight);
     createScatterPlot(scatterGroup, scatterWidth, scatterHeight);
+    createStarPlot(starPlotGroup, starPlotWidth, starPlotHeight);
     
 }).catch(error => {
     console.error("Error loading data:", error);
@@ -169,7 +180,7 @@ function createHeatmap(svg, width, height) {
         .style("font-weight", "bold")
         .style("fill", "black")
         .text(d => d.count === 0 ? "0" : d.count);
-    const legendWidth = 300;
+    const legendWidth = 200;
     const legendHeight = 20;
     const legendX = width - legendWidth - 20;
     const legendY = height + 50;
@@ -210,14 +221,51 @@ function createHeatmap(svg, width, height) {
         .attr("y", legendY - 5)
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
-        .text("Number of Pokémon");
+        .text("Number of Pokemon");
     
-    svg.append("text")
-        .attr("x", 10)
-        .attr("y", height + 50)
-        .attr("text-anchor", "start")
-        .attr("font-size", "12px")
-        .text("Note: Some types were not introduced in early generations (e.g., Steel and Dark were added in Gen 2)");
+        const noteX = 20;
+        const noteY = height + 50;
+        const noteWidth = width / 2 - 40;
+        
+        svg.append("text")
+            .attr("x", noteX)
+            .attr("y", noteY)
+            .attr("text-anchor", "start")
+            .attr("font-size", "12px")
+            .text("Note: Some types were not introduced in early generations")
+            .call(wrap, noteWidth);}
+
+function wrap(text, width) {
+    text.each(function() {
+        let text = d3.select(this),
+            words = text.text().split(/\s+/).reverse(),
+            word,
+            line = [],
+            lineNumber = 0,
+            lineHeight = 1.1,
+            x = text.attr("x"),
+            y = text.attr("y"),
+            dy = 0,
+            tspan = text.text(null).append("tspan")
+                .attr("x", x)
+                .attr("y", y)
+                .attr("dy", dy + "em");
+        
+        while (word = words.pop()) {
+            line.push(word);
+            tspan.text(line.join(" "));
+            if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                tspan.text(line.join(" "));
+                line = [word];
+                tspan = text.append("tspan")
+                    .attr("x", x)
+                    .attr("y", y)
+                    .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                    .text(word);
+            }
+        }
+    });
 }
 
 //SCATTER 
@@ -252,73 +300,29 @@ function createScatterPlot(svg, width, height) {
     svg.append("text")
         .attr("transform", "rotate(-90)")
         .attr("x", -height / 2)
-        .attr("y", -60)
+        .attr("y", -45)
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text("Total Base Stats");
     
-    const dotsGroup = svg.append("g")
-        .attr("class", "dots-group");
-    
-    dotsGroup.selectAll(".dot-type1")
+    svg.selectAll(".dot")
         .data(pokemonData)
         .join("circle")
-        .attr("class", "dot-type1")
+        .attr("class", "dot")
         .attr("cx", d => xScale(d[xMetric]))
         .attr("cy", d => yScale(d[yMetric]))
-        .attr("r", 8)
+        .attr("r", 6) 
         .attr("fill", d => typeColors[d.Type_1])
-        .attr("opacity", 0.7)
+        .attr("opacity", 0.8)
         .attr("stroke", "#333")
         .attr("stroke-width", 0.5);
     
-    dotsGroup.selectAll(".dot-type2")
-        .data(pokemonData.filter(d => d.Type_2))
-        .join("circle")
-        .attr("class", "dot-type2")
-        .attr("cx", d => xScale(d[xMetric]))
-        .attr("cy", d => yScale(d[yMetric]))
-        .attr("r", 4)
-        .attr("fill", d => typeColors[d.Type_2])
-        .attr("opacity", 1)
-        .attr("stroke", "#333")
-        .attr("stroke-width", 0.5);
-    
-    const dualTypeExample = svg.append("g")
-        .attr("transform", `translate(${width - 280}, ${height + 40})`);
-    
-    dualTypeExample.append("circle")
-        .attr("r", 8)
-        .attr("fill", "#F08030") 
-        .attr("opacity", 0.7)
-        .attr("stroke", "#333")
-        .attr("stroke-width", 0.5);
-    dualTypeExample.append("circle")
-        .attr("r", 4)
-        .attr("cx", 20)
-        .attr("fill", "#6890F0")
-        .attr("stroke", "#333")
-        .attr("stroke-width", 0.5);
-    
-    dualTypeExample.append("text")
-        .attr("x", 35)
-        .attr("y", 4)
-        .attr("font-size", "12px")
-        .text("Large circle: Primary Type (Type 1)");
-    
-    dualTypeExample.append("text")
-        .attr("x", 35)
-        .attr("y", 20)
-        .attr("font-size", "12px")
-        .text("Small circle: Secondary Type (Type 2)");
-
     createTypeLegend(svg, width);
-
     svg.append("text")
         .attr("x", 20)
-        .attr("y", height + 40)
+        .attr("y", height + 60)
         .attr("font-size", "12px")
-        .text("Note: Scatter plot shows relationship between Weight and Total Base Stats");
+        .text("Note: Scatter plot shows relationship between Weight and Total Base Stats colored by Primary Type");
 }
 
 function createTypeLegend(svg, width) {
@@ -329,19 +333,19 @@ function createTypeLegend(svg, width) {
     
     const topTypes = Object.entries(typeCounts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
+        .slice(0, 12)
         .map(d => d[0]);
     
     const legendGroup = svg.append("g")
-        .attr("transform", `translate(${width - 140}, 10)`);
+        .attr("transform", `translate(${width + 20}, 10)`);
     
     legendGroup.append("text")
         .attr("x", 0)
         .attr("y", -10)
         .attr("font-size", "12px")
         .attr("font-weight", "bold")
-        .text("Common Types");
-    
+        .text("Primary Types(Top 12)");
+
     const legendItems = legendGroup.selectAll(".legend-item")
         .data(topTypes)
         .join("g")
@@ -359,22 +363,166 @@ function createTypeLegend(svg, width) {
         .attr("y", 4)
         .attr("font-size", "12px")
         .text(d => d);
+
+    const noteY = topTypes.length * 20 + 15;
     
     legendGroup.append("text")
         .attr("x", 0)
-        .attr("y", 10 * 20 + 10)
+        .attr("y", noteY)
         .attr("font-size", "11px")
-        .text("Large stats often");
+        .text("Pokemon with high");
     
     legendGroup.append("text")
         .attr("x", 0)
-        .attr("y", 10 * 20 + 25)
+        .attr("y", noteY + 15)
         .attr("font-size", "11px")
-        .text("indicate legendary");
+        .text("Total stats are often");
     
     legendGroup.append("text")
         .attr("x", 0)
-        .attr("y", 10 * 20 + 40)
+        .attr("y", noteY + 30)
         .attr("font-size", "11px")
-        .text("Pokémon");
+        .text("Legendary Pokeon");
+}
+
+//Star Plot
+function createStarPlot(svg, width, height) {
+    const features = ["HP", "Attack", "Defense", "Sp_Atk", "Sp_Def", "Speed"];
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    const radius = Math.min(innerWidth, innerHeight) / 2;
+    
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left + innerWidth/2}, ${margin.top + innerHeight/2})`);
+    
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", 20)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "16px")
+        .text("Average Base Stats by Pokemon Type");
+    
+    const angleSlice = Math.PI * 2 / features.length;
+    const types = Array.from(new Set(pokemonData.map(d => d.Type_1))).sort();
+    const maxStats = {};
+    features.forEach(feature => {
+        maxStats[feature] = d3.max(pokemonData, d => d[feature]);
+    });
+    
+    const levels = 5;
+    const axisGrid = g.append("g").attr("class", "axis-grid");
+    
+    axisGrid.selectAll(".level")
+        .data(d3.range(1, levels + 1).reverse())
+        .join("circle")
+        .attr("class", "level")
+        .attr("r", d => radius * d / levels)
+        .attr("fill", "none")
+        .attr("stroke", "#CDCDCD")
+        .attr("stroke-width", 0.5);
+    const axes = axisGrid.selectAll(".axis")
+        .data(features)
+        .join("g")
+        .attr("class", "axis");
+    
+    axes.append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", (d, i) => radius * Math.cos(angleSlice * i - Math.PI / 2))
+        .attr("y2", (d, i) => radius * Math.sin(angleSlice * i - Math.PI / 2))
+        .attr("stroke", "#CDCDCD")
+        .attr("stroke-width", 1);
+
+    axes.append("text")
+        .attr("class", "axis-label")
+        .attr("x", (d, i) => radius * 1.15 * Math.cos(angleSlice * i - Math.PI / 2))
+        .attr("y", (d, i) => radius * 1.15 * Math.sin(angleSlice * i - Math.PI / 2))
+        .attr("text-anchor", (d, i) => {
+            if (i === 0 || i === features.length / 2) return "middle";
+            return i < features.length / 2 ? "start" : "end";
+        })
+        .attr("dominant-baseline", (d, i) => {
+            if (i === 1 || i === 2) return "hanging";
+            if (i === 4 || i === 5) return "text-before-edge";
+            return "middle";
+        })
+        .attr("font-size", "12px")
+        .text(d => d);
+    
+    const typeAvgStats = {};
+    
+    types.forEach(type => {
+        const typePokemon = pokemonData.filter(d => d.Type_1 === type);
+        
+        typeAvgStats[type] = {};
+        features.forEach(feature => {
+            typeAvgStats[type][feature] = d3.mean(typePokemon, d => d[feature]);
+        });
+    });
+    
+    const displayTypes = ["Water", "Fire", "Grass", "Electric", "Psychic", "Dragon"];
+    
+    const radarLine = d3.lineRadial()
+        .curve(d3.curveLinearClosed)
+        .radius(d => d.value)
+        .angle((d, i) => i * angleSlice);
+    
+    displayTypes.forEach((type, i) => {
+        const data = features.map(feature => ({
+            feature,
+            value: radius * (typeAvgStats[type][feature] / maxStats[feature])
+        }));
+        
+        g.append("path")
+            .datum(data)
+            .attr("class", `radar-area-${type}`)
+            .attr("d", radarLine)
+            .attr("fill", "none")
+            .attr("stroke", typeColors[type])
+            .attr("stroke-width", 2);
+        
+        g.selectAll(`.dot-${type}`)
+            .data(data)
+            .join("circle")
+            .attr("class", `dot-${type}`)
+            .attr("cx", (d, i) => d.value * Math.cos(angleSlice * i - Math.PI / 2))
+            .attr("cy", (d, i) => d.value * Math.sin(angleSlice * i - Math.PI / 2))
+            .attr("r", 4)
+            .attr("fill", typeColors[type]);
+    });
+    
+    const legendGroup = svg.append("g")
+        .attr("transform", `translate(${width - 120}, ${margin.top})`);
+    
+    legendGroup.append("text")
+        .attr("x", 0)
+        .attr("y", -10)
+        .attr("font-size", "12px")
+        .attr("font-weight", "bold")
+        .text("Pokemon Types");
+    
+    displayTypes.forEach((type, i) => {
+        const legendItem = legendGroup.append("g")
+            .attr("transform", `translate(0, ${i * 20})`);
+        
+        legendItem.append("rect")
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", typeColors[type])
+            .attr("opacity", 0.7);
+        
+        legendItem.append("text")
+            .attr("x", 25)
+            .attr("y", 12)
+            .attr("font-size", "12px")
+            .text(type);
+    });
+    
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height - 20)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .text("Star plot compares average base stats for different Pokemon types");
 }
