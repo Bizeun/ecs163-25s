@@ -1,6 +1,9 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
 
+// Configure heatmap positioning and dimensions (left side of screen)
+// Configure scatter plot positioning and dimensions (top-right)
+// Configure star plot positioning and dimensions (bottom-right)
 let heatmapLeft = 0, heatmapTop = 50;
 let heatmapMargin = {top: 60, right: 50, bottom: 80, left: 100},
     heatmapWidth = width * 0.5 - heatmapMargin.left - heatmapMargin.right,
@@ -17,6 +20,8 @@ let starPlotMargin = {top: 60, right: 50, bottom: 80, left: 60},
     starPlotHeight = (height - 100) * 0.5 - starPlotMargin.top - starPlotMargin.bottom;
 
 let pokemonData = [];
+
+// Define standard Pokemon type colors based on official game color scheme
 const typeColors = {
     "Normal": "#A8A878",
     "Fire": "#F08030",
@@ -38,6 +43,7 @@ const typeColors = {
     "Fairy": "#F0B6BC"
 };
 
+// Load and process the Pokemon dataset
 d3.csv("data/pokemon_alopez247.csv").then(data => {
     console.log("Pokemon data loaded successfully");
     data.forEach(d => {
@@ -82,6 +88,7 @@ d3.csv("data/pokemon_alopez247.csv").then(data => {
     const starPlotGroup = svg.append("g")
         .attr("transform", `translate(${starPlotLeft + starPlotMargin.left}, ${starPlotTop + starPlotMargin.top})`);
     
+    // Add titles for each visualization section
     svg.append("text")
         .attr("x", heatmapLeft + heatmapMargin.left + heatmapWidth / 2)
         .attr("y", heatmapTop + 30)
@@ -113,6 +120,7 @@ function createHeatmap(svg, width, height) {
     const types = Array.from(new Set(pokemonData.map(d => d.Type_1))).sort();
     const generations = Array.from(new Set(pokemonData.map(d => d.Generation))).sort((a, b) => a - b);
 
+    // Create aggregated data for the heatmap by counting Pokemon of each type per generation
     const heatmapData = [];
     types.forEach(type => {
         generations.forEach(gen => {
@@ -121,6 +129,7 @@ function createHeatmap(svg, width, height) {
         });
     });
     
+    // Create scales for x and y axes
     const x = d3.scaleBand()
         .domain(generations)
         .range([0, width])
@@ -156,7 +165,8 @@ function createHeatmap(svg, width, height) {
         .attr("x", -height / 2)
         .style("font-size", "14px")
         .text("Type");
-    
+
+    // Create heatmap cells - each cell represents Pokemon count for a type-generation combination
     svg.selectAll("rect")
         .data(heatmapData)
         .join("rect")
@@ -180,6 +190,8 @@ function createHeatmap(svg, width, height) {
         .style("font-weight", "bold")
         .style("fill", "black")
         .text(d => d.count === 0 ? "0" : d.count);
+
+    //Color gradient legend
     const legendWidth = 200;
     const legendHeight = 20;
     const legendX = width - legendWidth - 20;
@@ -208,6 +220,7 @@ function createHeatmap(svg, width, height) {
         .attr("height", legendHeight)
         .style("fill", "url(#heatmap-gradient)");
     
+    //legend
     const legendScale = d3.scaleLinear()
         .domain([0, maxCount])
         .range([0, legendWidth]);
@@ -235,6 +248,7 @@ function createHeatmap(svg, width, height) {
             .text("Note: Some types were not introduced in early generations")
             .call(wrap, noteWidth);}
 
+// Helper function for text wrapping (multiline text)
 function wrap(text, width) {
     text.each(function() {
         let text = d3.select(this),
@@ -273,6 +287,7 @@ function createScatterPlot(svg, width, height) {
     const xMetric = "Weight_kg";
     const yMetric = "Total";
     
+    //Scale of x and y
     const xScale = d3.scaleLinear()
         .domain([0, d3.max(pokemonData, d => d[xMetric]) * 1.05])
         .range([0, width])
@@ -305,6 +320,8 @@ function createScatterPlot(svg, width, height) {
         .style("font-size", "14px")
         .text("Total Base Stats");
     
+    // Create scatter plot points
+    // Each point represents a Pokemon, positioned by weight and total stats, colored by type
     svg.selectAll(".dot")
         .data(pokemonData)
         .join("circle")
@@ -325,6 +342,7 @@ function createScatterPlot(svg, width, height) {
         .text("Note: Scatter plot shows relationship between Weight and Total Base Stats colored by Primary Type");
 }
 
+// Helper function to create a legend for Pokemon types
 function createTypeLegend(svg, width) {
     const typeCounts = {};
     pokemonData.forEach(d => {
@@ -337,7 +355,7 @@ function createTypeLegend(svg, width) {
         .map(d => d[0]);
     
     const legendGroup = svg.append("g")
-        .attr("transform", `translate(${width + 20}, 10)`);
+        .attr("transform", `translate(${width +40}, 10)`);
     
     legendGroup.append("text")
         .attr("x", 0)
