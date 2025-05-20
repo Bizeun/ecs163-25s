@@ -6,17 +6,19 @@
 
 const createScatterPlot = async () => {
   // Get actual SVG element size
-  const svgElement = document.querySelector("svg");
+  const svgElement = document.querySelector("#scatter-plot-container svg");
   const fullWidth = svgElement.clientWidth;
   const fullHeight = svgElement.clientHeight;
   
+  let currentXVariable = "Walc";
+
   // Chart size and margin setup
   const margin = { top: 60, right: 80, bottom: 80, left: 80 };
   const width = fullWidth - margin.left - margin.right;
   const height = fullHeight - margin.top - margin.bottom;
 
   // Select SVG
-  const svg = d3.select("svg")
+  const svg = d3.select("#scatter-plot-container svg")
     .append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
@@ -56,11 +58,13 @@ const createScatterPlot = async () => {
       .attr("ry", 8);
     
     // Draw X-axis
-    svg.append("g")
+    const xAxis = svg.append("g")
       .attr("class", "x-axis")
       .attr("transform", `translate(0, ${height})`)
-      .call(d3.axisBottom(xScale))
-      .append("text")
+      .call(d3.axisBottom(xScale));
+    
+    // Add X-axis label that will update
+    const xAxisLabel = xAxis.append("text")
       .attr("class", "axis-label")
       .attr("x", width / 2)
       .attr("y", 40)
@@ -68,6 +72,7 @@ const createScatterPlot = async () => {
       .style("text-anchor", "middle")
       .style("font-size", "14px")
       .text("Weekend Alcohol Consumption (1-5)");
+    
     
     // Draw Y-axis
     svg.append("g")
@@ -111,7 +116,7 @@ const createScatterPlot = async () => {
       .data(data)
       .enter()
       .append("circle")
-      .attr("cx", d => xScale(+d.Walc))
+      .attr("cx", d => xScale(+d[currentXVariable]))
       .attr("cy", d => yScale(+d.G3))
       .attr("r", d => sizeScale(+d.absences))
       .attr("fill", d => colorScale(d.sex))
@@ -135,6 +140,48 @@ const createScatterPlot = async () => {
     // Variable to track selected data point
     let selectedPoint = null;
     
+    function updateXVariable(newVariable) {
+      if (newVariable === currentXVariable) return; // No change needed
+      
+      currentXVariable = newVariable;
+      // Update x-axis label
+      const labelText = newVariable === "Walc" 
+        ? "Weekend Alcohol Consumption (1-5)" 
+        : "Workday Alcohol Consumption (1-5)";
+      
+      xAxisLabel
+        .transition()
+        .duration(750)
+        .text(labelText);
+      
+      // Animate data points to new positions
+      points
+        .transition()
+        .duration(750)
+        .attr("cx", d => xScale(+d[currentXVariable]));
+      
+      // Clear any selected point and labels
+      if (selectedPoint) {
+        d3.select(selectedPoint)
+          .transition()
+          .duration(200)
+          .attr("r", d => sizeScale(+d.absences))
+          .attr("opacity", 0.7)
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 0.5);
+        
+        absenceLabels.selectAll("text").remove();
+        absenceLabelBg.selectAll("rect").remove();
+        selectedPoint = null;
+      }
+    }
+    
+    // Add event listeners to radio buttons
+    d3.selectAll('input[name="x-variable"]')
+      .on("change", function() {
+        updateXVariable(this.value);
+      });
+
     // Add mouse events
     points
       .on("mouseover", function(d) {
@@ -223,7 +270,7 @@ const createScatterPlot = async () => {
         
         // Add absence label with improved positioning
         absenceLabels.append("text")
-            .attr("x", xScale(+d.Walc))
+            .attr("x", xScale(+d[currentXVariable]))
             .attr("y", () => {
             const circleRadius = sizeScale(+d.absences) + 3;
             return yScale(+d.G3) - circleRadius - 8; // Position above the circle
@@ -306,7 +353,7 @@ const createScatterPlot = async () => {
     
     absenceItems.append("circle")
       .attr("r", d => sizeScale(d))
-      .attr("fill", "#888");
+      .attr("fill", "black");
     
     absenceItems.append("text")
       .attr("x", 15)

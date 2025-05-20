@@ -1,9 +1,11 @@
+//ECS-163 Hw2 - Sukhyun Hwang
+
 const width = window.innerWidth;
 const height = window.innerHeight;
 
-// Configure heatmap positioning and dimensions (left side of screen)
-// Configure scatter plot positioning and dimensions (top-right)
-// Configure star plot positioning and dimensions (bottom-right)
+//Configure heatmap positioning and dimensions (left side of screen)
+//Configure scatter plot positioning and dimensions (top-right)
+//Configure star plot positioning and dimensions (bottom-right)
 let heatmapLeft = 0, heatmapTop = 50;
 let heatmapMargin = {top: 60, right: 50, bottom: 80, left: 100},
     heatmapWidth = width * 0.5 - heatmapMargin.left - heatmapMargin.right,
@@ -21,7 +23,7 @@ let starPlotMargin = {top: 60, right: 50, bottom: 80, left: 60},
 
 let pokemonData = [];
 
-// Define standard Pokemon type colors based on official game color scheme
+//Define standard Pokemon type colors based on official game color scheme
 const typeColors = {
     "Normal": "#A8A878",
     "Fire": "#F08030",
@@ -43,7 +45,7 @@ const typeColors = {
     "Fairy": "#F0B6BC"
 };
 
-// Load and process the Pokemon dataset
+//Load and process the Pokemon dataset
 d3.csv("data/pokemon_alopez247.csv").then(data => {
     console.log("Pokemon data loaded successfully");
     data.forEach(d => {
@@ -120,7 +122,7 @@ function createHeatmap(svg, width, height) {
     const types = Array.from(new Set(pokemonData.map(d => d.Type_1))).sort();
     const generations = Array.from(new Set(pokemonData.map(d => d.Generation))).sort((a, b) => a - b);
 
-    // Create aggregated data for the heatmap by counting Pokemon of each type per generation
+    //Create aggregated data for the heatmap by counting Pokemon of each type per generation
     const heatmapData = [];
     types.forEach(type => {
         generations.forEach(gen => {
@@ -129,7 +131,7 @@ function createHeatmap(svg, width, height) {
         });
     });
     
-    // Create scales for x and y axes
+    //Create scales for x and y axes
     const x = d3.scaleBand()
         .domain(generations)
         .range([0, width])
@@ -166,7 +168,7 @@ function createHeatmap(svg, width, height) {
         .style("font-size", "14px")
         .text("Type");
 
-    // Create heatmap cells - each cell represents Pokemon count for a type-generation combination
+    //Create heatmap cells - each cell represents Pokemon count for a type-generation combination
     svg.selectAll("rect")
         .data(heatmapData)
         .join("rect")
@@ -248,7 +250,7 @@ function createHeatmap(svg, width, height) {
             .text("Note: Some types were not introduced in early generations")
             .call(wrap, noteWidth);}
 
-// Helper function for text wrapping (multiline text)
+//Helper function for text wrapping (multiline text)
 function wrap(text, width) {
     text.each(function() {
         let text = d3.select(this),
@@ -320,8 +322,8 @@ function createScatterPlot(svg, width, height) {
         .style("font-size", "14px")
         .text("Total Base Stats");
     
-    // Create scatter plot points
-    // Each point represents a Pokemon, positioned by weight and total stats, colored by type
+    //Create scatter plot points
+    //Each point represents a Pokemon, positioned by weight and total stats, colored by type
     svg.selectAll(".dot")
         .data(pokemonData)
         .join("circle")
@@ -342,7 +344,7 @@ function createScatterPlot(svg, width, height) {
         .text("Note: Scatter plot shows relationship between Weight and Total Base Stats colored by Primary Type");
 }
 
-// Helper function to create a legend for Pokemon types
+//Helper function to create a legend for Pokemon types
 function createTypeLegend(svg, width) {
     const typeCounts = {};
     pokemonData.forEach(d => {
@@ -358,7 +360,7 @@ function createTypeLegend(svg, width) {
         .attr("transform", `translate(${width +40}, 10)`);
     
     legendGroup.append("text")
-        .attr("x", 0)
+        .attr("x", -10)
         .attr("y", -10)
         .attr("font-size", "12px")
         .attr("font-weight", "bold")
@@ -423,14 +425,16 @@ function createStarPlot(svg, width, height) {
     
     const angleSlice = Math.PI * 2 / features.length;
     const types = Array.from(new Set(pokemonData.map(d => d.Type_1))).sort();
-    const maxStats = {};
+    const maxStats = {}; //Find maximum value for each stat for scaling
     features.forEach(feature => {
         maxStats[feature] = d3.max(pokemonData, d => d[feature]);
     });
     
+    // Define the number of circles (grid levels)
     const levels = 5;
     const axisGrid = g.append("g").attr("class", "axis-grid");
     
+    // Create circles
     axisGrid.selectAll(".level")
         .data(d3.range(1, levels + 1).reverse())
         .join("circle")
@@ -468,17 +472,20 @@ function createStarPlot(svg, width, height) {
         .attr("font-size", "12px")
         .text(d => d);
     
+    //Calculate average stats for each Pokemon type
     const typeAvgStats = {};
     
     types.forEach(type => {
         const typePokemon = pokemonData.filter(d => d.Type_1 === type);
         
+        //Calculate average stats for each feature
         typeAvgStats[type] = {};
         features.forEach(feature => {
             typeAvgStats[type][feature] = d3.mean(typePokemon, d => d[feature]);
         });
     });
     
+    // Select specific Pokemon types to display (avoid overcrowding the chart)
     const displayTypes = ["Water", "Fire", "Grass", "Electric", "Psychic", "Dragon"];
     
     const radarLine = d3.lineRadial()
@@ -486,6 +493,7 @@ function createStarPlot(svg, width, height) {
         .radius(d => d.value)
         .angle((d, i) => i * angleSlice);
     
+    // Draw polygons for each Pokemon type
     displayTypes.forEach((type, i) => {
         const data = features.map(feature => ({
             feature,
@@ -510,6 +518,7 @@ function createStarPlot(svg, width, height) {
             .attr("fill", typeColors[type]);
     });
     
+    //Legend
     const legendGroup = svg.append("g")
         .attr("transform", `translate(${width - 120}, ${margin.top})`);
     
@@ -520,6 +529,7 @@ function createStarPlot(svg, width, height) {
         .attr("font-weight", "bold")
         .text("Pokemon Types");
     
+    //Create legend items for each displayed type
     displayTypes.forEach((type, i) => {
         const legendItem = legendGroup.append("g")
             .attr("transform", `translate(0, ${i * 20})`);
