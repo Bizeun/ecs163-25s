@@ -13,7 +13,7 @@ const createScatterPlot = async () => {
   let currentXVariable = "Walc";
 
   // Chart size and margin setup
-  const margin = { top: 60, right: 80, bottom: 80, left: 80 };
+  const margin = { top: 60, right: 120, bottom: 80, left: 80 };
   const width = fullWidth - margin.left - margin.right;
   const height = fullHeight - margin.top - margin.bottom;
 
@@ -306,7 +306,7 @@ const createScatterPlot = async () => {
     // Add legend
     const legend = svg.append("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${width - 120}, 10)`);
+      .attr("transform", `translate(${width+40}, 10)`);
     
     // Gender legend
     const genderLegend = legend.append("g")

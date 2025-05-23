@@ -3,11 +3,22 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="description" content="">
-	<title>Student Alcohol Cosumption Dashboard</title>
+	<title>Student Alcohol Consumption Dashboard</title>
 	<style>
+		.dashboard-container {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			grid-template-rows: 1fr 1fr;
+			width: 100vw;
+			height: 100vh;
+			gap: 10px;
+			padding: 10px;
+			box-sizing: border-box;
+		}
+
 		.control-panel {
 			position: absolute;
-			top: 10px;
+			bottom: 10px;
 			left: 10px;
 			background: rgba(255, 255, 255, 0.8);
 			padding: 5px;
@@ -17,23 +28,33 @@
 		.control-panel label {
 			margin-right: 10px;
 			font-family: sans-serif;
+			font-size: 12px;
+			display: block; 
+			margin-bottom: 5px; 
+		}
+		.chart-panel {
+			position: relative;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			overflow: hidden;
 		}
 		.gender-filter {
 			position: absolute;
-			top: 50%;
-			right: 20px;
+			top: 10px;
+			right: 10px;
 			background: rgba(255, 255, 255, 0.8);
 			padding: 10px;
 			border-radius: 5px;
 			box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 			display: flex;
-			flex-direction: column;
+			flex-direction: row;
 			z-index: 100;
 		}
 
 		.gender-filter button {
-			margin: 5px;
-			padding: 8px 12px;
+			margin: 2px;
+			padding: 6px 10px;
+			font-size: 12px;
 			border: none;
 			background-color: #f1f1f1;
 			border-radius: 4px;
@@ -46,52 +67,61 @@
 		}
 
 		.gender-filter button.active {
-			background-color: #4CAF50;
+			background-color: #af8b4c;
 			color: white;
 		}
 		#scatter-plot-container {
-			width: 100%;
-			height: 50%;
-			position: absolute;
-			top: 0;
-			left: 0;
+			grid-column: 1;
+			grid-row: 1;
 		}
 		#bar-chart-container {
-			width: 100%;
-			height: 50%;
-			position: absolute;
-			top: 50%;
-			left: 0;
+			grid-column: 2;
+			grid-row: 1;
+		}
+		#parallel-coords-container {
+			grid-column: 1 / -1;
+			grid-row: 2;
 		}
 </style>
 </head>
 <body style="width:100%;height:100%;margin: 0;">
-	<div class="control-panel">
-		<label><input type="radio" name="x-variable" value="Walc" checked> Weekend Alcohol Consumption</label>
-		<label><input type="radio" name="x-variable" value="Dalc"> Workday Alcohol Consumption</label>
+	<div class = "dashboard-container">
+		<div id="scatter-plot-container" class="chart-panel">
+			<div class="control-panel">
+				<label><input type="radio" name="x-variable" value="Walc" checked> Weekend Alcohol Consumption</label>
+				<label><input type="radio" name="x-variable" value="Dalc"> Workday Alcohol Consumption</label>
+			</div>
+			<svg width="100%" height="100%"></svg>
+		</div>
+		<div id="bar-chart-container" class="chart-panel">
+			<div class="gender-filter">
+				<button onclick="updateBarChart('all')" class="active">All Students</button>
+				<button onclick="updateBarChart('F')">Female</button>
+				<button onclick="updateBarChart('M')">Male</button>
+			</div>
+			<svg width="100%" height="100%"></svg>
+		</div>
+		<div id="parallel-coords-container" class="chart-panel">
+			<svg width="100%" height="100%"></svg>
+		</div>
 	</div>
-
-	<div id="scatter-plot-container">
-		<svg width="100%" height="100%"></svg>
-	</div>
-
-	<div id="bar-chart-container">
-		<svg width="100%" height="100%"></svg>
-	</div>
-	<div class="gender-filter">
-		<button onclick="updateBarChart('all')" class="active">All Students</button>
-		<button onclick="updateBarChart('F')">Female</button>
-		<button onclick="updateBarChart('M')">Male</button>
-	</div>
-	<svg width="100%" height="100%">
-
-	</svg>
 
 	<script src="https://d3js.org/d3.v5.min.js"></script>
 	<script src="main.js"></script>
 	<script src="bar-chart.js"></script>
 	<script>
-
+		function updateBarChart(filter) {
+			console.log("Updating bar chart with filter:", filter);
+			const buttons = document.querySelectorAll('.gender-filter button');
+			buttons.forEach(button => {
+				button.classList.remove('active');
+				if (button.innerText.toLowerCase().includes(filter.toLowerCase()) || 
+					(filter === 'all' && button.innerText.includes('All'))) {
+					button.classList.add('active');
+				}
+			});
+		}
 	</script>
+	<script src="parallel-coords.js"></script>
 </body>
 </html>
